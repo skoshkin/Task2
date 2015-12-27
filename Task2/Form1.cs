@@ -15,9 +15,16 @@ namespace Task2
     public partial class Form1 : Form
     {
         private List<Setter> Setters { get; set; }
+
+        private int LeftFinish { get; set; }
+
+        private int Delta { get; set; }
+
         public Form1()
         {
             Setters = new List<Setter>();
+            LeftFinish = 700;
+            Delta = 10;
             InitializeComponent();
         }
 
@@ -79,7 +86,7 @@ namespace Task2
         /// <param name="e"></param>
         private void Start_Click(object sender, EventArgs e)
         {
-            GameController.CalculateGame(Setters);//расчитываем все значения
+            GameController.SetBets(Setters);//расчитываем все значения
             var Bets = GameController.Bets;
             if (Bets.Count != 3)
             {
@@ -107,40 +114,73 @@ namespace Task2
                 var bug2 = GameController.Bugs.First(s => s.Number == 2);
                 var bug3 = GameController.Bugs.First(s => s.Number == 3);
                 var bug4 = GameController.Bugs.First(s => s.Number == 4);
-                //анимация движения картинок
-                for (int i =0; i < 10; i++)
-                {
-                    if (bug1.Number == 1 && bug1.Position >= i)
-                    {
-                        pictureBox_gambler_1.Left = i*70;
-                    }
-                    if (bug2.Number == 2 && bug2.Position >= i)
-                    {
-                        pictureBox_gambler_2.Left = i*70;
-                    }
-                    if (bug3.Number == 3 && bug3.Position >= i)
-                    {
-                        pictureBox_gambler_3.Left = i*70;
-                    }
-                    if (bug4.Number == 4 && bug4.Position >= i)
-                    {
-                        pictureBox_gambler_4.Left = i*70;
-                    }
-                    Thread.Sleep(300);
-                }
-                
-                result_label.Text = GameController.ResultGames.Aggregate("", (current, item) => current + item);
-            }
 
+                var imageWidth = 143;
+
+                //анимация движения картинок
+                while (true)
+                {
+                    var nextPosition = GameController.Bugs.Max(s => s.Position) + 1;
+                    if (GameController.Bugs.Count(s => s.IsFinish) == 4)
+                    {
+                        break;
+                    }
+                    var left1 = bug1.Move(Delta);
+                    if (!bug1.IsFinish)
+                    {
+                        pictureBox_gambler_1.Left = left1;
+                        if (left1 + imageWidth >= LeftFinish)
+                        {
+                            bug1.IsFinish = true;
+                            bug1.Position = nextPosition;
+                        }
+                    }
+                    var left2 = bug2.Move(Delta);
+                    if (!bug2.IsFinish)
+                    {
+                        pictureBox_gambler_2.Left = left2;
+                        if (left2 + imageWidth >= LeftFinish)
+                        {
+                            bug2.IsFinish = true;
+                            bug2.Position = nextPosition;
+                        }
+                    }
+                    var left3 = bug3.Move(Delta);
+                    if (!bug3.IsFinish)
+                    {
+                        pictureBox_gambler_3.Left = left3;
+                        if (left3 + imageWidth >= LeftFinish)
+                        {
+                            bug3.IsFinish = true;
+                            bug3.Position = nextPosition;
+                        }
+                    }
+                    var left4 = bug4.Move(Delta);
+                    if (!bug4.IsFinish)
+                    {
+                        pictureBox_gambler_4.Left = left4;
+                        if (left4 + imageWidth >= LeftFinish)
+                        {
+                            bug4.IsFinish = true;
+                            bug4.Position = nextPosition;
+                        }
+                    }
+                    Thread.Sleep(100);
+                }
+                GameController.CalcWinning();//расчитываем все значения
+                result_label.Text = result_label.Text + "\n" + GameController.ResultGames.Aggregate("", (current, item) => current + item);
+                GameController.InitializeStaticCollection();
+            }
         }
 
         /// <summary>
-        /// Событие загрузки формы, инициализируем картинки и выставляем их 70 px от края
+        /// Инициализируем картинки и выставляем их 70 px от края
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Form1_Load(object sender, EventArgs e)
+        void ImageInitialize()
         {
+            //Устанавливаем финишь
+            pictureBox_Finish.Left = LeftFinish;
+            //Инициализируем картинки
             foreach (var item in GameController.Bugs)
             {
                 var image = Image.FromFile(item.Image);
@@ -171,8 +211,17 @@ namespace Task2
                         pictureBox_gambler_4.Left = 0;
                         break;
                 }
-
             }
+        }
+
+        /// <summary>
+        /// Событие загрузки формы
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            ImageInitialize();
         }
     }
 }

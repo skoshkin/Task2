@@ -15,6 +15,17 @@ namespace Task2.Game
         public int Number { get; set; }
         public string Name { get; set; }
         public string Image { get; set; }
+        /// <summary>
+        /// Общее смещение
+        /// </summary>
+        private int LeftTotal { get; set; }
+        /// <summary>
+        /// Финишировал ли участник
+        /// </summary>
+        public bool IsFinish { get; set; }
+        /// <summary>
+        /// Номер под которым финишировал
+        /// </summary>
         public int Position { get; set; }
 
         /// <summary>
@@ -25,25 +36,32 @@ namespace Task2.Game
         /// <param name="_number">Номер</param>
         public Bug(string _name, string _image, int _number)
         {
-            Position = 0;
+            LeftTotal = 0;
             Image = _image;
             Name = _name;
             Number = _number;
         }
 
-        public void Move()
+        /// <summary>
+        /// Считает смещение
+        /// </summary>
+        /// <param name="delta">Дельта(длинна шага)</param>
+        /// <returns></returns>
+        public int Move(int delta)
         {
-            
+            var leftStep = delta * RandomPosition();
+            LeftTotal = LeftTotal + leftStep;
+            return LeftTotal;
         }
 
         /// <summary>
         /// Генерирует рэндомное значение
         /// </summary>
-        public void RandomPosition()
+        private int RandomPosition()
         {
             Thread.Sleep(20);
             var rnd = new Random();
-            Position = rnd.Next(0,10);
+            return rnd.Next(0, 5);
         }
     }
 }

@@ -87,7 +87,7 @@ namespace Task2
         /// Метод устанваливает ставки
         /// </summary>
         /// <param name="col"></param>
-        public static void CalculateGame(IEnumerable<Setter> col)
+        public static void SetBets(IEnumerable<Setter> col)
         {
             Bets = new List<Bet>();
             foreach (var item in col)
@@ -98,74 +98,132 @@ namespace Task2
                 var row = new Bet(b, g, item.Bet);//создаем ставку
                 Bets.Add(row);//добавляем ставку
             }
-
-            //Генерируем случайные числа для каждого участника
-            foreach (var item in Bugs)
-            {
-                item.RandomPosition();
-            }
-
-            //Определяем побудителей 
-            //-------------- первое место -----------------
-            var Positions = Bugs.OrderByDescending(s=>s.Position).Select(s=>s.Position).Distinct().ToList();//Отсортировали по убыванию взяли тока уникальные значения
-            var bugs = Bugs.Where(s => s.Position == Positions[0]);
-
-            var res = "";
-            if (bugs.Count() > 1)
-            {
-                res = bugs.Aggregate("В забеге победили участники с номерами ", (current, item) => current + " " + item.Number);
-            }
-            else
-            {
-                res = "В забеге победил участник с номером " + bugs.First().Number;
-            }
-            ResultGames.Add(res + "\n");//добавили в историю
-            var summ = Bets.Sum(s => s.Amount);//сумма всех ставок
-            var first = (summ / 2) / bugs.Count();
-            var totalFirst = (summ/2);
-            if (bugs.Count() > 1)
-            {
-                res = "1-е место. Выйгрышь составил " + first.ToString("F2") + ". Количество победителей: " + bugs.Count();
-            }
-            else
-            {
-                res = "1-е место. Выйгрышь составил " + first.ToString("F2") + ". Количество победителей: 1";
-            }
-            ResultGames.Add(res + "\n");//добавили в историю
-
-            //------------- второе место -----------------
-
-            bugs = Bugs.Where(s => s.Position == Positions[1]);
-            summ = summ - totalFirst;//сумма всех ставок
-            var two = (summ*0.75) / bugs.Count();
-            var totalTwo = (summ * 0.75);
-            if (bugs.Count() > 1)
-            {
-                res = "2-е место. Выйгрышь составил " + two.ToString("F2") + ". Количество победителей: " + bugs.Count();
-            }
-            else
-            {
-                res = "2-е место. Выйгрышь составил " + two.ToString("F2") + ". Количество победителей: 1";
-            }
-            ResultGames.Add(res + "\n");//добавили в историю
-
-
-            //-----------------третье место--------------
-            bugs = Bugs.Where(s => s.Position == Positions[1]);
-            summ = summ - (float)totalTwo;//сумма всех ставок
-            var free = (summ) / bugs.Count();
-            if (bugs.Count() > 1)
-            {
-                res = "3-е место. Выйгрышь составил " + free.ToString("F2") + ". Количество победителей: " + bugs.Count();
-            }
-            else
-            {
-                res = "3-е место. Выйгрышь составил " + free.ToString("F2") + ". Количество победителей: 1";
-            }
-            ResultGames.Add(res + "\n");//добавили в историю
-
         }
 
+        /// <summary>
+        /// Расчитываем выйгрышь
+        /// </summary>
+        public static void CalcWinning()
+        {
+            var bugs1 = Bugs.Where(s => s.Position == 1).ToList();//первое место участники
+            var summ = Bets.Sum(s => s.Amount);//сумма всех ставок
+            //Победившие участники
+            var res = "";
+            if (bugs1.Count() > 1)
+            {
+                res = bugs1.Aggregate("В забеге победили участники с номерами ", (current, item) => current + " " + item.Number);
+            }
+            else
+            {
+                res = "В забеге победил участник с номером " + bugs1.First().Number;
+            }
+            ResultGames.Add(res + "\n");//добавили в историю
+            
+            //-------------- выйгрышь первого игрока -----------------
+            try
+            {
+                var bets1 = Bets.Where(s => bugs1.Any(q => q.Name == s.Bug.Name)).ToList();
+                var summBet = (summ / 2) / bets1.Count();
+                float totalFirst = (summ / 2);
+                summ = summ - totalFirst;//сумма всех ставок
+                switch (bets1.Count())
+                {
+                    case 0:
+                        res = "Игроков, которые поставили на 1-е место нет.";
+                        break;
+                    case 1:
+                        res = "Для игрока " + bets1.First().Gambler.Name + " выйгрыш составил " + summBet.ToString("F2") + ".";
+                        break;
+                    default:
+                        var strBest = bets1.Aggregate("", (current, item) => current + " " + item.Gambler.Name);
+                        res = "Для игроков: " + strBest + " выйгрыш составил " + summBet.ToString("F2") + " для каждого.";
+                        break;
+                }
+                ResultGames.Add(res + "\n");//добавили в историю
+            }
+            catch (Exception ex)
+            {
+                
+            }
+
+            ////------------- второе место -----------------
+            try
+            {
+                var bugs2 = Bugs.Where(s => s.Position == 2).ToList();//первое место участники
+                var bets2 = Bets.Where(s => bugs2.Any(q => q.Name == s.Bug.Name)).ToList();
+                var summBet = (summ * 0.75) / bets2.Count();
+                float totalFirst = summ * (float)0.75;
+                summ = summ - totalFirst;//сумма всех ставок
+                switch (bets2.Count())
+                {
+                    case 0:
+                        res = "Игроков, которые поставили на 2-е место нет.";
+                        break;
+                    case 1:
+                        res = "Для игрока " + bets2.First().Gambler.Name + " выйгрыш составил " + summBet.ToString("F2")+ ".";
+                        break;
+                    default:
+                        var strBest = bets2.Aggregate("", (current, item) => current + " " + item.Gambler.Name);
+                        res = "Для игроков: " + strBest + " выйгрыш составил " + summBet.ToString("F2") + " для каждого.";
+                        break;
+                }
+                ResultGames.Add(res + "\n");//добавили в историю
+            }
+            catch (Exception ex)
+            {
+
+            }
+            
+            ////-----------------третье место--------------
+            try
+            {
+                var bugs3 = Bugs.Where(s => s.Position == 3).ToList();//первое место участники
+                var bets3 = Bets.Where(s => bugs3.Any(q => q.Name == s.Bug.Name)).ToList();
+                var summBet = (summ) / bets3.Count();
+                switch (bets3.Count())
+                {
+                    case 0:
+                        res = "Игроков, которые поставили на 3-е место нет.";
+                        break;
+                    case 1:
+                        res = "Для игрока " + bets3.First().Gambler.Name + " выйгрыш составил " + summBet.ToString("F2") + ".";
+                        break;
+                    default:
+                        var strBest = bets3.Aggregate("", (current, item) => current + " " + item.Gambler.Name);
+                        res = "Для игроков: " + strBest + " выйгрыш составил " + summBet.ToString("F2") + " для каждого.";
+                        break;
+                }
+                ResultGames.Add(res + "\n");//добавили в историю
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+            ////-----------------четвертое место--------------
+            try
+            {
+                var bugs4 = Bugs.Where(s => s.Position == 4).ToList(); //первое место участники
+                var bets4 = Bets.Where(s => bugs4.Any(q => q.Name == s.Bug.Name)).ToList();
+                if (bets4.Any())
+                {
+                    var strBest = bets4.Aggregate("", (current, item) => current + " " + item.Gambler.Name);
+                    if (bets4.Count>1)
+                    {
+                        res = "Игроки: " + strBest + " проиграли.";
+                    }
+                    else
+                    {
+                        res = "Игрок: " + strBest + " проиграл.";
+                    }
+                    ResultGames.Add(res + "\n"); //добавили в историю
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
 
     }
 
